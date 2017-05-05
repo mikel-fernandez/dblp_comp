@@ -75,7 +75,6 @@ def dblp_comp(inputfile, outputfile):
         try:
             title = entry['title']
         except:
-            #print bcolors.FAIL + bcolors.UNDERLINE + 'LOCL' + bcolors.ENDC + ': (Unknown) ' + bcolors.BOLD + '(entry does not have a title)' + bcolors.ENDC
             pprint(bcolors.FAIL, 'LOCL', '(Unknown)', 'entry does not have a title')
             local_cnt += 1
             continue
@@ -87,7 +86,6 @@ def dblp_comp(inputfile, outputfile):
         try:
             xmlstr = urllib2.urlopen("http://dblp.org/search/publ/api/?q=" + searchstr + "&format=xml&h=1").read()
         except:
-            #print bcolors.FAIL + bcolors.UNDERLINE + 'LOCL' + bcolors.ENDC + ': ' + title + ' ' + bcolors.BOLD + '(failed to fetch results from DBLP)' + bcolors.ENDC
             pprint(bcolors.FAIL, 'LOCL', title, 'failed to fetch results from DBLP')
             local_cnt += 1
             continue
@@ -104,7 +102,6 @@ def dblp_comp(inputfile, outputfile):
             t2 = t2.replace('{', '')
             if t2.lower() == title.lower():
                 #we found the same title; add the information on DBLP
-                #print bcolors.OKGREEN + bcolors.UNDERLINE + 'DBLP' + bcolors.ENDC + ': ' + t
                 pprint(bcolors.OKGREEN, 'DBLP', t)
                 dblp_cnt += 1
                 entrytype = entry['ENTRYTYPE']
@@ -134,11 +131,9 @@ def dblp_comp(inputfile, outputfile):
                     if i.tag not in exceptions: 
                         entry[i.tag] = latexencode.utf8tolatex(i.text)
             else:
-                #print bcolors.WARNING + bcolors.UNDERLINE + 'LOCL' + bcolors.ENDC + ': ' + t2 + ' ' + bcolors.UNDERLINE + 'vs' + bcolors.ENDC + ' ' + title + ' ' + bcolors.BOLD + '(titles do not match)' + bcolors.ENDC
                 pprint(bcolors.WARNING, 'LOCL', t2, 'titles do not match', title)
                 local_cnt += 1
         else:
-            #print bcolors.WARNING + bcolors.UNDERLINE + 'LOCL' + bcolors.ENDC + ': ' + title + ' ' + bcolors.BOLD + '(entry not found)' + bcolors.ENDC
             pprint(bcolors.WARNING, 'LOCL', title, 'entry not found')
             local_cnt += 1
 
