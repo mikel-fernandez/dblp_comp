@@ -10,7 +10,7 @@ the user can create exceptions to ignore some of the imported data (-e).
 
 ## Usage:
 ```
-  python dblp_comp.py -i infile.bib -o outf.bib -e exception1 -e exception2
+  python dblp_comp.py -i in.bib -o out.bib -e exception1 -e exception2
 ```
 
 ## Help:

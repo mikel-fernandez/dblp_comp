@@ -90,7 +90,6 @@ def dblp_comp(inputfile, outputfile):
             local_cnt += 1
             continue
         xml = ET.fromstring(xmlstr)
-        # if we don't find results, we keep our old data
         if xml.find('./hits').attrib['total'] != "0":
             hit = xml.find('./hits/hit/info/url')
             xmlstr = urllib2.urlopen(re.sub('/rec/', '/rec/xml/', hit.text)).read()
@@ -131,13 +130,14 @@ def dblp_comp(inputfile, outputfile):
                     if i.tag not in exceptions: 
                         entry[i.tag] = latexencode.utf8tolatex(i.text)
             else:
+        	# if we don't find results, we keep our old data
                 pprint(bcolors.WARNING, 'LOCL', t2, 'titles do not match', title)
                 local_cnt += 1
         else:
             pprint(bcolors.WARNING, 'LOCL', title, 'entry not found')
             local_cnt += 1
 
-        # As recommended by DBLP, we will sleep before we proceed with the search
+        # As recommended by DBLP, sleep before continuing the search
         time.sleep(1)
 
     # write entries to output
@@ -147,7 +147,10 @@ def dblp_comp(inputfile, outputfile):
         bibtexparser.dump(bib_database, output_file)
 
     print ''
-    print 'Database updated. ' + bcolors.OKGREEN + str(dblp_cnt) + bcolors.ENDC + ' entries updated from DBLP, ' + bcolors.WARNING + str(local_cnt) + bcolors.ENDC + ' entries kept as they were.'
+    if sys.stdout.isatty():
+    	print 'Database updated. ' + bcolors.OKGREEN + str(dblp_cnt) + bcolors.ENDC + ' entries updated from DBLP, ' + bcolors.WARNING + str(local_cnt) + bcolors.ENDC + ' entries kept as they were.'
+    else:
+    	print 'Database updated. ' + str(dblp_cnt) + ' entries updated from DBLP, ' + str(local_cnt) + ' entries kept as they were.'
     print ''
 
 def main(argv):
