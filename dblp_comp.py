@@ -32,9 +32,10 @@ sys.setdefaultencoding('utf-8')
 
 # XML fields that we will ignore. ee, doi and author should be here, as they are parsed separately
 # Other exceptions can be added with the -e parameters (see help)
-exceptions = [ 'ee', 'doi', 'author' ] # do not modify 
+exceptions = ['ee', 'doi', 'author']  # do not modify
 
-class bcolors:
+
+class style:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
@@ -44,21 +45,26 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-def pprint(color, head, title1, errortext = '', title2 = ''):
+
+def pprint(color, head, title1, errortext='', title2=''):
     if sys.stdout.isatty():
         if errortext == '':
-            print color + bcolors.UNDERLINE + head + bcolors.ENDC + ': ' + title1 + ''
+            print(color + style.UNDERLINE +
+                  head + style.ENDC + ': ' + title1 + '')
         elif title2 == '':
-            print color + bcolors.UNDERLINE + head + bcolors.ENDC + ': ' + title1 + ' ' + bcolors.BOLD + '(' + errortext + ')' + bcolors.ENDC
+            print(color + style.UNDERLINE + head + style.ENDC + ': ' +
+                  title1 + ' ' + style.BOLD + '(' + errortext + ')' + style.ENDC)
         else:
-            print color + bcolors.UNDERLINE + head + bcolors.ENDC + ': ' + title1 + ' ' + bcolors.UNDERLINE + 'vs' + bcolors.ENDC + ' ' + title2 + ' ' + bcolors.BOLD + '(' + errortext + ')' + bcolors.ENDC
+            print(color + style.UNDERLINE + head + style.ENDC + ': ' + title1 + ' ' + style.UNDERLINE +
+                  'vs' + style.ENDC + ' ' + title2 + ' ' + style.BOLD + '(' + errortext + ')' + style.ENDC)
     else:
         if errortext == '':
-            print head + ': ' + title1
+            print(head + ': ' + title1)
         elif title2 == '':
-            print head + ': ' + title1 + ' (' + errortext + ')'
+            print(head + ': ' + title1 + ' (' + errortext + ')')
         else:
-            print head + ': ' + title1 + ' vs ' + title2 + ' (' + errortext + ')'
+            print(head + ': ' + title1 + ' vs ' +
+                  title2 + ' (' + errortext + ')')
 
 
 def dblp_comp(inputfile, outputfile):
@@ -67,7 +73,7 @@ def dblp_comp(inputfile, outputfile):
     local_cnt = 0
 
     parser = BibTexParser()
-    parser.customization = homogeneize_latex_encoding 
+    parser.customization = homogeneize_latex_encoding
     with open(inputfile) as input_file:
         bib_database = bibtexparser.load(input_file, parser=parser)
 
@@ -75,7 +81,8 @@ def dblp_comp(inputfile, outputfile):
         try:
             title = entry['title']
         except:
-            pprint(bcolors.FAIL, 'LOCL', '(Unknown)', 'entry does not have a title')
+            pprint(style.FAIL, 'LOCL', '(Unknown)',
+                   'entry does not have a title')
             local_cnt += 1
             continue
         title = title.replace('}', '')
@@ -84,24 +91,27 @@ def dblp_comp(inputfile, outputfile):
         searchstr = re.sub(' ', '$.', title)
         searchstr = re.sub('$', '$', searchstr)
         try:
-            xmlstr = urllib2.urlopen("http://dblp.org/search/publ/api/?q=" + searchstr + "&format=xml&h=1").read()
+            xmlstr = urllib2.urlopen(
+                "http://dblp.org/search/publ/api/?q=" + searchstr + "&format=xml&h=1").read()
         except:
-            pprint(bcolors.FAIL, 'LOCL', title, 'failed to fetch results from DBLP')
+            pprint(style.FAIL, 'LOCL', title,
+                   'failed to fetch results from DBLP')
             local_cnt += 1
             continue
         xml = ET.fromstring(xmlstr)
         if xml.find('./hits').attrib['total'] != "0":
             hit = xml.find('./hits/hit/info/url')
-            xmlstr = urllib2.urlopen(re.sub('/rec/', '/rec/xml/', hit.text)).read()
+            xmlstr = urllib2.urlopen(
+                re.sub('/rec/', '/rec/xml/', hit.text)).read()
             xml = ET.fromstring(xmlstr)
             hit = xml.find('./')
-            t =  re.sub('\.$', '', hit.find('title').text)
+            t = re.sub('\.$', '', hit.find('title').text)
             t2 = t
             t2 = t2.replace('}', '')
             t2 = t2.replace('{', '')
             if t2.lower() == title.lower():
-                #we found the same title; add the information on DBLP
-                pprint(bcolors.OKGREEN, 'DBLP', t)
+                # we found the same title; add the information on DBLP
+                pprint(style.OKGREEN, 'DBLP', t)
                 dblp_cnt += 1
                 entrytype = entry['ENTRYTYPE']
                 entryid = entry['ID']
@@ -112,29 +122,30 @@ def dblp_comp(inputfile, outputfile):
                 entry['title'] = latexencode.utf8tolatex(t)
                 # Authors
                 alist = ''
-                first = True 
+                first = True
                 for a in hit.findall('author'):
                     if not first:
-                        alist +=" and "
+                        alist += " and "
                     first = False
                     alist += a.text
                 entry['author'] = latexencode.utf8tolatex(alist)
                 # DOI
                 try:
-                    doi = hit.find('ee').text.split('/')[3] + '/' + hit.find('ee').text.split('/')[4]
+                    doi = hit.find('ee').text.split('/')[
+                        3] + '/' + hit.find('ee').text.split('/')[4]
                     entry['doi'] = latexencode.utf8tolatex(doi)
                 except:
                     pass
                 # Other fields
                 for i in hit:
-                    if i.tag not in exceptions: 
+                    if i.tag not in exceptions:
                         entry[i.tag] = latexencode.utf8tolatex(i.text)
             else:
-        	# if we don't find results, we keep our old data
-                pprint(bcolors.WARNING, 'LOCL', t2, 'titles do not match', title)
+                # if we don't find results, we keep our old data
+                pprint(style.WARNING, 'LOCL', t2, 'titles do not match', title)
                 local_cnt += 1
         else:
-            pprint(bcolors.WARNING, 'LOCL', title, 'entry not found')
+            pprint(style.WARNING, 'LOCL', title, 'entry not found')
             local_cnt += 1
 
         # As recommended by DBLP, sleep before continuing the search
@@ -146,26 +157,31 @@ def dblp_comp(inputfile, outputfile):
     with open(outputfile, 'w') as output_file:
         bibtexparser.dump(bib_database, output_file)
 
-    print ''
+    print('')
     if sys.stdout.isatty():
-    	print 'Database updated. ' + bcolors.OKGREEN + str(dblp_cnt) + bcolors.ENDC + ' entries updated from DBLP, ' + bcolors.WARNING + str(local_cnt) + bcolors.ENDC + ' entries kept as they were.'
+        print('Database updated. ' + style.OKGREEN + str(dblp_cnt) + style.ENDC + ' entries updated from DBLP, ' +
+              style.WARNING + str(local_cnt) + style.ENDC + ' entries kept as they were.')
     else:
-    	print 'Database updated. ' + str(dblp_cnt) + ' entries updated from DBLP, ' + str(local_cnt) + ' entries kept as they were.'
-    print ''
+        print('Database updated. ' + str(dblp_cnt) + ' entries updated from DBLP, ' +
+              str(local_cnt) + ' entries kept as they were.')
+    print('')
+
 
 def main(argv):
     inputfile = ''
     outputfile = ''
-    extra_exceptions = [ ]
+    extra_exceptions = []
     try:
-        opts, args = getopt.getopt(argv,"hi:o:e:")
+        opts, args = getopt.getopt(argv, "hi:o:e:")
     except getopt.GetoptError:
-        print 'python dblp_comp.py -i <inputfile> -o <outputfile> [-e <field_to_exclude> -e <field_to_exclude2> ...]'
+        print(
+            'python dblp_comp.py -i <inputfile> -o <outputfile> [-e <field_to_exclude> -e <field_to_exclude2> ...]')
         sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
-            print 'python dblp_comp.py -i <inputfile> -o <outputfile> [-e <field_to_exclude> -e <field_to_exclude2> ...]'
+            print(
+                'python dblp_comp.py -i <inputfile> -o <outputfile> [-e <field_to_exclude> -e <field_to_exclude2> ...]')
             sys.exit()
         elif opt == "-i":
             inputfile = arg
@@ -179,10 +195,10 @@ def main(argv):
     if outputfile == '':
         raise Exception("Output file must be defined")
     if len(extra_exceptions) > 0:
-        print ''
-        print "Omitting the following fields: " + str(extra_exceptions)
-        print ''
+        print('')
+        print("Omitting the following fields: " + str(extra_exceptions))
+        print('')
     dblp_comp(inputfile, outputfile)
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])

@@ -13,6 +13,17 @@ the user can create exceptions to ignore some of the imported data (-e).
   python dblp_comp.py -i in.bib -o out.bib -e exception1 -e exception2
 ```
 
+## Dependencies:
+```
+getopt
+pylatexenc
+re
+time
+xml
+urllib2
+bibtexparser
+```
+
 ## Help:
 ```
   python dblp_comp.py -h
