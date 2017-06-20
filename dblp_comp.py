@@ -1,3 +1,5 @@
+#!/usr/bin/python
+#
 ###############################################################################
 #   dblp_comp.py
 #       mikel.fernandez@bsc.es
@@ -99,8 +101,8 @@ def dblp_comp(inputfile, outputfile):
             local_cnt += 1
             continue
         xml = ET.fromstring(xmlstr)
-        if xml.find('./hits').attrib['total'] != "0":
-            hit = xml.find('./hits/hit/info/url')
+        hit = xml.find('./hits/hit/info/url')
+        if hit != None:
             xmlstr = urllib2.urlopen(
                 re.sub('/rec/', '/rec/xml/', hit.text)).read()
             xml = ET.fromstring(xmlstr)
